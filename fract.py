@@ -13,14 +13,37 @@ import matplotlib.pyplot as plt
 BASE=2.0
 
 def logb(base, exp):
+    """
+    Implementacion del logaritmo en base n
+    """
     return log(exp)/log(base)
 
 def pixeles(path):
-    im = Image.open(path).convert('1')
+    """
+    :param path: localizacion de la imagen a cargar (todos los formatos soportados)
+    Devuelve en una tupla: ancho, alto y mapa de pixeles (accesible con [i,j]) de la imagen
+    """
+    im = Image.open(path).convert('L')
     (w,h) = im.size
     pix = im.load()
     # L = [[pix[i,j] for j in range(h)] for i in range(w)]
     return (w, h, pix)
+
+def coeficientes(w,h,granularity=0):
+    """
+    :param w: altura de la imagen
+    :param h: ancho de la imagen
+    :param granularity: granularidad, orden de magnitud de numeros primos a 
+        usar como base aparte del 1
+    Devuelve una lista de valores que indican el ancho de las distintas cajas 
+    a usar
+    """
+    dim = min(h,w)
+    factors = [ 2 * i + 1 for i in range(2**granularity) ]
+    
+    sides = map(lambda x: [x * (2 ** i) for i in range( int(log2(dim/x) + 1) )], factors)    
+    
+    return sides
 
 def boxcofs(L, plot=False, ndrop=0):
     meds = [(BASE**(-1-i)) for i in range(len(L))][::-1]
@@ -75,9 +98,9 @@ def recuadros(path):
     # print factor
     return L
             
-def f(path, plot=False, ndrop=1):
+def f(path, ndrop=1, plot=True):
     L = recuadros(path)
-    return boxcofs(map(len,L), plot=True, ndrop=ndrop)
+    return boxcofs(map(len,L), plot, ndrop=ndrop)
     # print cofs
     # return stats(map(lambda x: -log(x), cofs), map(log, L)) 
 
