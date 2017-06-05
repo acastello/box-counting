@@ -74,7 +74,7 @@ class box:
         if plot:
             self.plot()
         self.stage = box.dime
-        return L,m
+        return L,self.m
         
     def plot(self):
         x = map(lambda (x,_): x, self.dims)
@@ -82,12 +82,12 @@ class box:
         def f(x):
             return self.m * x + self.n
         plt.rc('grid', linestyle=":", color='black', alpha=0.5)
-        plt.rc('font', **{'sans-serif' : 'Arial',
-                           'family' : 'sans-serif'})
+        plt.rc('font', family='serif')
+        plt.rc('text', usetex=True)
         plt.figure(1)
         plt.subplot(111)
-        plt.xlabel(u"-log δ")
-        plt.ylabel(u"log N(δ)")
+        plt.xlabel(r'-log $\delta$')
+        plt.ylabel(r'log N($\delta$)')
         plt.grid()
         plt.plot(x, y, 'ro')
         plt.plot([x[0]-0.25, x[-1]+0.25],[f(x[0]-0.25), f(x[-1]+0.25)],'b-')
