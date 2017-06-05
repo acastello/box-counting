@@ -6,7 +6,6 @@ This is a temporary script file.
 """
 
 from PIL import Image
-import PIL
 from scipy import log,log2,floor,average
 from multiprocessing import Pool
 import matplotlib.pyplot as plt
@@ -16,6 +15,12 @@ class box:
     Clase contenedora de variables importantes. Tambien ayuda a generar 
     recursivamente los datos necesarios para cualquier operación
     """
+    
+    coef = 1    
+    recu = 2
+    dime = 3
+    
+    
     def __init__(self, filepath, threshold=128):
         self.filepath = filepath
         self.threshold = threshold
@@ -24,23 +29,25 @@ class box:
         self.min = min(self.w, self.h)
         self.max = max(self.w, self.h)
         self.pixmap = im.load()
-        self.coefs = None
-        self.sets = None
-        self.dims = None
-        self.m = None
-        self.n = None
+        self.stage = 0
+        self.g = 0
             
     def coeficientes(self, g=0, f = lambda x: x):
+        if type(g) == list:
+            self.coefs = self.g = g
+            return g
         factors = [ 2 * i + 1 for i in range(2 ** g) ]
         pots = lambda e: [e * (2 ** i) for i in range( int(log2(self.min/e)))]
         sides = reduce(lambda x, y: x + pots(y), factors, [])
         sides.sort()
         sides = f(sides)
         self.coefs = sides
+        self.g = g
+        self.stage = box.coef
         return sides
 
     def recubrimientos(self, g=0):
-        if self.coefs == None:
+        if self.stage < box.recu or g != self.g:
             self.coeficientes(g)
         L = {k: set() for k in self.coefs}
         
@@ -51,10 +58,11 @@ class box:
                         s.add( (i//e, j//e) )
         
         self.sets = L
+        self.stage = box.recu
         return L
 
-    def dimensiones(self, g=0, plot=True):
-        if self.sets == None:
+    def dimensiones(self, g=0, plot=True, pre=0, post=0):
+        if self.stage < box.dime or g != self.g:
             self.recubrimientos(g)
         L = []
         offset = log2(self.max)
@@ -65,7 +73,8 @@ class box:
         self.m, self.n = regresion(L)
         if plot:
             self.plot()
-        return L
+        self.stage = box.dime
+        return L,m
         
     def plot(self):
         x = map(lambda (x,_): x, self.dims)
@@ -206,5 +215,6 @@ def f(path, ndrop=1, plot=True):
     return boxcofs(map(len,L), plot, ndrop=ndrop)
     # print cofs
     # return stats(map(lambda x: -log(x), cofs), map(log, L)) 
-
-
+    
+# if __name__ == '__main__':
+    
