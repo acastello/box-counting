@@ -69,6 +69,7 @@ class box:
         for k,v in self.sets.items():
             L.append( ( -log2(k)+offset, log2(len(v)) ) )
         L.sort()
+        L = L[pre:len(L)-post]
         self.dims = L
         self.m, self.n = regresion(L)
         if plot:
@@ -77,8 +78,7 @@ class box:
         return L,self.m
         
     def plot(self):
-        x = map(lambda (x,_): x, self.dims)
-        y = map(lambda (_,y): y, self.dims)
+        [x,y] = zip(*self.dims)
         def f(x):
             return self.m * x + self.n
         plt.rc('grid', linestyle=":", color='black', alpha=0.5)
