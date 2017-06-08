@@ -114,7 +114,7 @@ class Box:
     def recubrimientos(self, g=0):
         if self.stage >= Box.recu and g == self.g and self.coefs == self.sets.keys:
             return self.sets
-        elif self.stage < Box.recu:
+        elif self.stage < Box.recu or g != self.g:
             self.coeficientes(g)
             self.sets = {}
         keys = self.sets.keys()
@@ -160,12 +160,15 @@ class Box:
         def f(x):
             return self.m * x + self.n
         plt.rc('grid', linestyle=":", color='black', alpha=0.5)
-        plt.rc('font', family='serif')
-        plt.rc('text', usetex=True)
+        # plt.rc('font', family='Arial')
+#         plt.rc('text', usetex=True)
         plt.figure(1)
         plt.subplot(111)
-        plt.xlabel(r'-log $\delta$')
-        plt.ylabel(r'log N($\delta$)')
+        # δ
+        plt.xlabel(u'-log d')
+        plt.ylabel(u"-log N(d)")
+        # plt.xlabel(r'-log $\delta$')
+        # plt.ylabel(r'log N($\delta$)')
         plt.grid()
         plt.plot(x, y, 'ro')
         plt.plot([x[0]-0.5, x[-1]+0.5],[f(x[0]-0.5), f(x[-1]+0.5)],'b-')
@@ -194,7 +197,7 @@ class Box:
         maskpix = Mask.load()
         for (x,y) in points:
             for i in range(escala):
-                for j in range(escala):
+                for j in range(int(escala)):
                     if escala * x + i < self.w and escala * y + j < self.h:
                         pix[escala * x + i, escala * y + j] = color
                         maskpix[escala * x + i, escala * y + j] = alpha
