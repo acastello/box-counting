@@ -9,6 +9,7 @@ from PIL import Image, ImageColor
 from scipy import log2,average
 import os
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 
 class Box:
     u"""
@@ -22,9 +23,9 @@ class Box:
                    considerarlo como opaco, por defecto es 85
     
     
-    - La función :func:`dimension` devuelve la dimensión box-counting calculada
-      según la recta de regresión y, si no se especifca lo contrario, muestra un 
+    - La función :func:`dimension` devuelve la dimensión box-counting calculada 
       grafico para visualizar la distribucion de la dimensión respecto a los 
+      según la recta de regresión y, si no se especifca lo contrario, muestra un
       distintos recubrimientos.
     
     - :func:`imagen` genera una imagen que representa un recubrimiento concreto 
@@ -165,8 +166,9 @@ class Box:
         plt.figure(1)
         plt.subplot(111)
         # δ
-        plt.xlabel(u'-log d')
-        plt.ylabel(u"-log N(d)")
+        fp = FontProperties('Consolas')
+        plt.xlabel(u'-log δ', fontproperties=fp)
+        plt.ylabel(u"-log N(δ)", fontproperties = fp)
         # plt.xlabel(r'-log $\delta$')
         # plt.ylabel(r'log N($\delta$)')
         plt.grid()
@@ -174,8 +176,8 @@ class Box:
         plt.plot([x[0]-0.5, x[-1]+0.5],[f(x[0]-0.5), f(x[-1]+0.5)],'b-')
         plt.show()
     
-    def imagen(self, escala, imposed=True, grid=True, color=0xfffffd7b, 
-               linecolor=0xffff4436, alpha=127, **opts):
+    def imagen(self, escala, imposed=True, grid=True, color=(0x7b, 0xfd, 0xff, 0xff), 
+               linecolor=(0x36, 0x44, 255, 255), alpha=127, **opts):
         self.recubrimientos(**opts)
         if self.sets.has_key(escala):
             points = self.sets[escala]
@@ -197,7 +199,7 @@ class Box:
         maskpix = Mask.load()
         for (x,y) in points:
             for i in range(escala):
-                for j in range(int(escala)):
+                for j in range(escala):
                     if escala * x + i < self.w and escala * y + j < self.h:
                         pix[escala * x + i, escala * y + j] = color
                         maskpix[escala * x + i, escala * y + j] = alpha
@@ -236,6 +238,7 @@ class Box:
         
         Imfinal.save(filename)
         return filename
+
         
 def regresion(L, N = None):
     """
