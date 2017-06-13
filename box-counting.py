@@ -9,7 +9,6 @@ from PIL import Image, ImageColor
 from scipy import log2,average
 import os
 import matplotlib.pyplot as plt
-from matplotlib.font_manager import FontProperties
 
 class Box:
     u"""
@@ -98,7 +97,22 @@ class Box:
         self.stage = 0
         self.g = 0
             
-    def coeficientes(self, g=0, f = lambda x: x):
+    def coeficientes(self, g=0):
+        u"""
+        Genera la lista de deltas a usar, por defecto genera potencias de 2 
+        
+        :param g: (opcional) indica o bien una lista explicita de deltas a 
+            aplicar al objecto, o un nivel de granularidad (por defecto es 0), 
+            el cual determina exponencialmente cuantos numeros impares se usan 
+            multiplicados por potencias de 2
+        g = 0 -> [1] * 2^n -> [1,2,4,8,16..]
+        
+        g = 1 -> [1,3,5] * 2^n -> [1,2,3,4,5,6,8,10..]
+        
+        g = 2 -> [1,3,5,7,9,11,13] -> [1,2,3,..,11,12,13,14,16,18,20..]        
+        
+        .. note:: no es necesario llamar a esta función directamente
+        """
         if type(g) == list:
             self.coefs = self.g = g
             return g
@@ -106,13 +120,19 @@ class Box:
         pots = lambda e: [e * (2 ** i) for i in range( int(log2(self.min/e)) )]
         sides = reduce(lambda x, y: x + pots(y), factors, [])
         sides.sort()
-        sides = f(sides)
         self.coefs = sides
         self.g = g
         self.stage = Box.coef
         return sides
 
     def recubrimientos(self, g=0):
+        u"""
+        Recorriendo la imagen pixel por pixel, se expande el atributo `sets` 
+        del objeto, asignando a cada delta, un `set` de tuplas, que representan
+        los recuadros que recubren la imagen con lado delta.
+        
+        .. note:: no es necesario llamar a esta función directamente
+        """
         if self.stage >= Box.recu and g == self.g and self.coefs == self.sets.keys:
             return self.sets
         elif self.stage < Box.recu or g != self.g:
@@ -132,6 +152,20 @@ class Box:
         return L
 
     def dimension(self, g=0, plot=True, pre=0, post=0):
+        u"""
+        Calcula la dimensión box-counting
+        
+        :param plot: (bool, opcional) determina si se muestra o no el gráfico
+            que ilustra la recta de regresión. 
+        :param pre: (opcional) si `pre` es un ``int``, descarta los `pre`
+            primeros datos en el cálculo de la dimensión.
+            si `pre` es un ``float``, descarta los datos cuyo -log(δ) sea menor
+            que `pre`. Esto permite "podar" los datos que se observan en el 
+            gráfico
+        :param post: (opcional) análogo a `pre`, si es un ``int``, descarta los
+            `post` últimos datos, si es un ``float``, "poda" los datos cuyo
+            -log(δ) es mayor que `post`
+        """
         if self.stage < Box.dime or g != self.g:
             self.recubrimientos(g)
         L = []
@@ -160,24 +194,47 @@ class Box:
         [x,y] = zip(*self.dims)
         def f(x):
             return self.m * x + self.n
+        # arreglo para asegurar que se muestra bien la δ
         plt.rc('grid', linestyle=":", color='black', alpha=0.5)
-        # plt.rc('font', family='Arial')
-#         plt.rc('text', usetex=True)
+        plt.rc(u'font', **{u'family': u'sans', u'sans-serif': 
+                [u'Liberation Sans', u'Droid Sans', u'FreeSans', u'Consolas', 
+                 u'DejaVu Sans', u'Bitstream Vera Sans', u'Lucida Grande',
+                 u'Verdana', u'Geneva', u'Lucid', u'Arial', u'Helvetica',
+                 u'Avant Garde', u'sans-serif']})
+                 
         plt.figure(1)
         plt.subplot(111)
-        # δ
-        fp = FontProperties('Consolas')
-        plt.xlabel(u'-log δ', fontproperties=fp)
-        plt.ylabel(u"-log N(δ)", fontproperties = fp)
-        # plt.xlabel(r'-log $\delta$')
-        # plt.ylabel(r'log N($\delta$)')
+        plt.title(u'dimensión resultante: {:0.3f}'.format(self.m))
+        plt.xlabel(u'-log δ')
+        plt.ylabel(u'-log N(δ)')
         plt.grid()
         plt.plot(x, y, 'ro')
         plt.plot([x[0]-0.5, x[-1]+0.5],[f(x[0]-0.5), f(x[-1]+0.5)],'b-')
         plt.show()
     
-    def imagen(self, escala, imposed=True, grid=True, color=(0x7b, 0xfd, 0xff, 0xff), 
-               linecolor=(0x36, 0x44, 255, 255), alpha=127, **opts):
+    def imagen(self, escala, imposed=True, grid=True, color=(123,253,255), 
+               linecolor=(54, 68, 255), alpha=127, path=None, **opts):
+        u"""
+        Genera y guarda una imagen con mismas dimensiones que la original,
+        pero con los recuadros de lado `escala` mostrando el recubrimiento
+        creado
+        
+        :param imposed: Determina si se superpone este recubrimiento sobre la
+            imagen original o si se muestra solo. ``True`` por defecto
+        :param grid: Mostrar o no la malla que delimita cada recuadro. ``True``
+            por defecto
+        :param color: El color de los recuadros
+        :param linecolor: El color de la malla
+        :param alpha: La transparencia de los recuadros (0-255). 127 por defecto
+        :param path: Nombre de fichero donde guardar la imagen.
+            <imagen original>_<escala>.png por defecto
+            
+        .. note::
+            Los colores se especifican por el estandar de `matplotlib`:
+                - ``string`` (como los nombres en CSS): "grey", "SlateBlue", "#RRGGBB"
+                - tuplas: (R,G,B)
+                - numérico: 0xBBGGRR
+        """
         self.recubrimientos(**opts)
         if self.sets.has_key(escala):
             points = self.sets[escala]
@@ -223,8 +280,11 @@ class Box:
                     if x1 < self.w and yi < self.h:
                         gridpix[x1, yi] = linecolor
 
-        (base,_) = os.path.splitext(self.filepath)
-        filename = base + '_' + str(escala) + '.png'
+        if path == None:
+            (base,_) = os.path.splitext(self.filepath)
+            filename = base + '_' + str(escala) + '.png'
+        else:
+            filename = path
         
         if imposed:
             Imf = Image.composite(Im, self.img.convert('RGBA'), Mask)
