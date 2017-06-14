@@ -200,7 +200,7 @@ class Box:
                 [u'Liberation Sans', u'Droid Sans', u'FreeSans', u'Consolas', 
                  u'DejaVu Sans', u'Bitstream Vera Sans', u'Lucida Grande',
                  u'Verdana', u'Geneva', u'Lucid', u'Arial', u'Helvetica',
-                 u'Avant Garde', u'sans-serif']})
+                 u'Avant Garde', u'sans-serif']})`
                  
         plt.figure(1)
         plt.subplot(111)
