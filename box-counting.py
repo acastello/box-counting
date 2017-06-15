@@ -6,7 +6,7 @@ This is a temporary script file.
 """
 
 from PIL import Image, ImageColor
-from scipy import log2,average
+from scipy import log,log2,average
 import os
 import matplotlib.pyplot as plt
 
@@ -116,7 +116,7 @@ class Box:
         if type(g) == list:
             self.coefs = self.g = g
             return g
-        factors = [ 2 * i + 1 for i in range(2 ** g) ]
+        factors = [ 2 * i + 1 for i in range(2 ** g + 1) ]
         pots = lambda e: [e * (2 ** i) for i in range( int(log2(self.min/e)) )]
         sides = reduce(lambda x, y: x + pots(y), factors, [])
         sides.sort()
@@ -200,13 +200,13 @@ class Box:
                 [u'Liberation Sans', u'Droid Sans', u'FreeSans', u'Consolas', 
                  u'DejaVu Sans', u'Bitstream Vera Sans', u'Lucida Grande',
                  u'Verdana', u'Geneva', u'Lucid', u'Arial', u'Helvetica',
-                 u'Avant Garde', u'sans-serif']})`
+                 u'Avant Garde', u'sans-serif']})
                  
         plt.figure(1)
         plt.subplot(111)
         plt.title(u'dimensión resultante: {:0.3f}'.format(self.m))
-        plt.xlabel(u'-log δ')
-        plt.ylabel(u'-log N(δ)')
+        plt.xlabel(u'- log δ')
+        plt.ylabel(u'log N(δ)')
         plt.grid()
         plt.plot(x, y, 'ro')
         plt.plot([x[0]-0.5, x[-1]+0.5],[f(x[0]-0.5), f(x[-1]+0.5)],'b-')
